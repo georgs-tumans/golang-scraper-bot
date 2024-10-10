@@ -49,18 +49,19 @@ func (c *BondsClient) getBondsOffers() (*OffersResponse, error) {
 	return offersResponse, nil
 }
 
-func (c *BondsClient) ProcessSavingBondsOffers() error {
+func (c *BondsClient) ProcessSavingBondsOffers() (float64, error) {
 	log.Println("[ProcessSavingBondsOffers] Processing saving bonds offers")
 	bondOffers, err := c.getBondsOffers()
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	for _, offer := range *bondOffers {
 		if offer.Period == 12 && offer.InterestRate >= c.BondsRateThreshold {
-			log.Println("[ProcessSavingBondsOffers] 12 months interest rate match (" + fmt.Sprintf("%.2f", offer.InterestRate) + "), sending e-mail")
+			log.Println("[ProcessSavingBondsOffers] 12 months interest rate match (" + fmt.Sprintf("%.2f", offer.InterestRate) + ")")
+			return offer.InterestRate, nil
 		}
 	}
 
-	return nil
+	return 0, nil
 }

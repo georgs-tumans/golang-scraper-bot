@@ -25,3 +25,4 @@ go.work.sum
 .env
 todo.txt
 golang_web_scraper.log
+golang_web_scraper_bot.log
