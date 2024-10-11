@@ -10,7 +10,9 @@ A Telegram bot with a set of tools originally intended for acquiring whatever da
 
 ## Preconditions
 
-Before using this app you need a Telegram bot API key which means you must register a bot. Learn how to do it [here](https://core.telegram.org/bots#how-do-i-create-a-bot).
+- A Telegram bot API key which means you must register a bot. Learn how to do it [here](https://core.telegram.org/bots#how-do-i-create-a-bot).
+- Docker installed (if you want to run this in a container)
+- GO installed (if you want to run it as a regular console app)
 
 ## Use
 
