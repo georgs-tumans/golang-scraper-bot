@@ -1,4 +1,4 @@
-module bonds_bot
+module web_scraper_bot
 
 go 1.23.2
 

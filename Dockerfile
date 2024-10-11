@@ -1,0 +1,24 @@
+# Step 1: Use the official Go image to build the app
+FROM golang:1.23.2-alpine AS build
+
+# Step 2: Set the working directory inside the container
+WORKDIR /app
+
+# Step 3: Copy the Go app source code into the container
+COPY . .
+
+# Step 4: Download Go modules and build the app
+RUN go mod download
+RUN go build -o web_scraper_bot .
+
+# Step 5: Use a smaller image for the final build
+FROM alpine:latest
+
+# Step 6: Set the working directory in the new smaller image
+WORKDIR /root/
+
+# Step 7: Copy the built Go binary from the build stage
+COPY --from=build /app/web_scraper_bot .
+
+# Step 9: Run the Go app
+CMD ["./web_scraper_bot"]

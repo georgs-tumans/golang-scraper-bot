@@ -21,7 +21,7 @@ func GetConfig() *Configuration {
 	if config == nil {
 		err := godotenv.Load()
 		if err != nil {
-			log.Fatalf("[GetConfig] Error loading .env file")
+			log.Println("[GetConfig] Error loading .env file")
 		}
 
 		config = &Configuration{
@@ -36,6 +36,13 @@ func GetConfig() *Configuration {
 		} else {
 			config.BondsRateThreshold = rate
 		}
+
+		// For debugging purposes
+		// configJSON, err := json.MarshalIndent(config, "", "  ")
+		// if err != nil {
+		// 	log.Fatalf("[GetConfig] Error serializing configuration to JSON: %v", err)
+		// }
+		// log.Printf("[GetConfig] Loaded configuration: %s\n", configJSON)
 	}
 
 	return config

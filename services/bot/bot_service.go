@@ -1,15 +1,13 @@
 package bot
 
 import (
-	"bonds_bot/clients"
-	"bonds_bot/config"
-	"bufio"
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 	"time"
+	"web_scraper_bot/clients"
+	"web_scraper_bot/config"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -44,7 +42,6 @@ func (b *BotService) InitializeBot() {
 
 	// Create a new cancellable background context. Calling `cancel()` leads to the cancellation of the context
 	ctx := context.Background()
-	ctx, cancel := context.WithCancel(ctx)
 
 	// `updates` is a golang channel which receives telegram updates
 	updates := b.Bot.GetUpdatesChan(u)
@@ -53,11 +50,9 @@ func (b *BotService) InitializeBot() {
 	go b.receiveUpdates(ctx, updates)
 
 	// Tell the user the bot is online
-	log.Println("[Bot service] Listening for updates. Press enter to stop")
+	log.Println("[Bot service] Listening for updates.")
 
-	// Wait for a newline symbol, then cancel handling updates
-	bufio.NewReader(os.Stdin).ReadBytes('\n')
-	cancel()
+	select {}
 }
 
 func (b *BotService) receiveUpdates(ctx context.Context, updates tgbotapi.UpdatesChannel) {
@@ -137,7 +132,7 @@ func (b *BotService) handleCommand(chatId int64, command string) error {
 }
 
 func (b *BotService) activateBondsClient(chatId int64) {
-	ticker := time.NewTicker(1 * time.Minute)
+	ticker := time.NewTicker(1 * time.Hour)
 	quit := make(chan struct{}) // Channel to signal immediate stop
 	bondsClient := clients.NewBondsClient()
 

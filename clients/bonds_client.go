@@ -1,11 +1,11 @@
 package clients
 
 import (
-	"bonds_bot/config"
-	"bonds_bot/services"
 	"encoding/json"
 	"fmt"
 	"log"
+	"web_scraper_bot/config"
+	"web_scraper_bot/services"
 )
 
 type BondsClient struct {
