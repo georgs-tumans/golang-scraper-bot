@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"log"
 	"os"
 	"strconv"
@@ -38,11 +39,11 @@ func GetConfig() *Configuration {
 		}
 
 		// For debugging purposes
-		// configJSON, err := json.MarshalIndent(config, "", "  ")
-		// if err != nil {
-		// 	log.Fatalf("[GetConfig] Error serializing configuration to JSON: %v", err)
-		// }
-		// log.Printf("[GetConfig] Loaded configuration: %s\n", configJSON)
+		configJSON, err := json.MarshalIndent(config, "", "  ")
+		if err != nil {
+			log.Fatalf("[GetConfig] Error serializing configuration to JSON: %v", err)
+		}
+		log.Printf("[GetConfig] Loaded configuration: %s\n", configJSON)
 	}
 
 	return config
