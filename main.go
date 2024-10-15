@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
-	services "web_scraper_bot/services/bot"
+	"web_scraper_bot/bot_fixer"
 )
 
 func main() {
@@ -17,6 +17,7 @@ func main() {
 	}()
 
 	log.Println("Starting bot service")
-	botService := services.NewBotService()
-	botService.InitializeBot()
+	botFixer := bot_fixer.NewBotFixer()
+	//botService.InitializeBotLongPolling()
+	botFixer.InitializeBotWebhook()
 }

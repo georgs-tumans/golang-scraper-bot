@@ -1,7 +1,6 @@
 package config
 
 import (
-	"encoding/json"
 	"log"
 	"os"
 	"strconv"
@@ -14,6 +13,7 @@ type Configuration struct {
 	BondsViewURL       string
 	BondsRateThreshold float64
 	BotAPIKey          string
+	WebhookURL         string
 }
 
 var config *Configuration
@@ -30,6 +30,7 @@ func GetConfig() *Configuration {
 			BondsDataSourceURL: os.Getenv("BONDS_DATA_SOURCE_URL"),
 			BondsViewURL:       os.Getenv("BONDS_VIEW_URL"),
 			BotAPIKey:          os.Getenv("BOT_API_KEY"),
+			WebhookURL:         os.Getenv("WEBHOOK_URL"),
 		}
 
 		if rate, rateErr := strconv.ParseFloat(os.Getenv("BONDS_RATE_THRESHOLD"), 64); rateErr != nil {
@@ -39,11 +40,11 @@ func GetConfig() *Configuration {
 		}
 
 		// For debugging purposes
-		configJSON, err := json.MarshalIndent(config, "", "  ")
-		if err != nil {
-			log.Fatalf("[GetConfig] Error serializing configuration to JSON: %v", err)
-		}
-		log.Printf("[GetConfig] Loaded configuration: %s\n", configJSON)
+		// configJSON, err := json.MarshalIndent(config, "", "  ")
+		// if err != nil {
+		// 	log.Fatalf("[GetConfig] Error serializing configuration to JSON: %v", err)
+		// }
+		// log.Printf("[GetConfig] Loaded configuration: %s\n", configJSON)
 	}
 
 	return config

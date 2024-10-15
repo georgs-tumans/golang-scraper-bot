@@ -1,61 +1,55 @@
-package bot
+package bot_fixer
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"strings"
 	"time"
 	"web_scraper_bot/clients"
-	"web_scraper_bot/config"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-type BotService struct {
-	Bot               *tgbotapi.BotAPI
-	Config            *config.Configuration
-	BondsClientActive bool
-}
+func (b *BotFixer) webhookHandler(w http.ResponseWriter, r *http.Request) {
 
-func NewBotService() *BotService {
-	botService := &BotService{
-		Config: config.GetConfig(),
-	}
-
-	var err error
-	botService.Bot, err = tgbotapi.NewBotAPI(botService.Config.BotAPIKey)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		log.Panic(err)
-		return nil
+		log.Printf("[Bot fixer] Error reading request body: %v", err)
+		http.Error(w, "Could not read request body", http.StatusBadRequest)
+
+		return
 	}
 
-	return botService
+	// Parse the body as a Telegram update
+	var update tgbotapi.Update
+	if err := json.Unmarshal(body, &update); err != nil {
+		log.Printf("[Bot fixer] Error parsing update: %v", err)
+		http.Error(w, "Could not parse update", http.StatusBadRequest)
+
+		return
+	}
+
+	// Handle the update
+	if update.Message != nil {
+		chatID := update.Message.Chat.ID
+		text := update.Message.Text
+
+		// Reply with the same text
+		msg := tgbotapi.NewMessage(chatID, "You said: "+text)
+		if _, err := b.Bot.Send(msg); err != nil {
+			log.Printf("[Bot fixer] Failed to send message: %v", err)
+		}
+	}
+
+	// Respond with a 200 OK status to Telegram
+	w.WriteHeader(http.StatusOK)
 }
 
-func (b *BotService) InitializeBot() {
-	// Set this to true to log all interactions with telegram servers
-	b.Bot.Debug = false
-
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
-
-	// Create a new cancellable background context. Calling `cancel()` leads to the cancellation of the context
-	ctx := context.Background()
-
-	// `updates` is a golang channel which receives telegram updates
-	updates := b.Bot.GetUpdatesChan(u)
-
-	// Pass cancellable context to goroutine
-	go b.receiveUpdates(ctx, updates)
-
-	// Tell the user the bot is online
-	log.Println("[Bot service] Listening for updates.")
-
-	select {}
-}
-
-func (b *BotService) receiveUpdates(ctx context.Context, updates tgbotapi.UpdatesChannel) {
+func (b *BotFixer) receiveUpdates(ctx context.Context, updates tgbotapi.UpdatesChannel) {
 	// `for {` means the loop is infinite until we manually stop it
 	for {
 		select {
@@ -69,7 +63,7 @@ func (b *BotService) receiveUpdates(ctx context.Context, updates tgbotapi.Update
 	}
 }
 
-func (b *BotService) handleUpdate(update tgbotapi.Update) {
+func (b *BotFixer) handleUpdate(update tgbotapi.Update) {
 	switch {
 	// Handle messages
 	case update.Message != nil:
@@ -81,7 +75,7 @@ func (b *BotService) handleUpdate(update tgbotapi.Update) {
 	}
 }
 
-func (b *BotService) handleMessage(message *tgbotapi.Message) {
+func (b *BotFixer) handleMessage(message *tgbotapi.Message) {
 	user := message.From
 	text := message.Text
 
@@ -89,7 +83,7 @@ func (b *BotService) handleMessage(message *tgbotapi.Message) {
 		return
 	}
 
-	log.Printf("[Bot service] %s wrote %s", user.FirstName, text)
+	log.Printf("[Bot fixer] %s wrote %s", user.FirstName, text)
 
 	var err error
 	if strings.HasPrefix(text, "/") {
@@ -97,12 +91,12 @@ func (b *BotService) handleMessage(message *tgbotapi.Message) {
 	}
 
 	if err != nil {
-		log.Printf("[Bot service] An error occured while handlind message: %s", err.Error())
+		log.Printf("[Bot fixer] An error occured while handlind message: %s", err.Error())
 	}
 }
 
 // When we get a command, we react accordingly
-func (b *BotService) handleCommand(chatId int64, command string) error {
+func (b *BotFixer) handleCommand(chatId int64, command string) error {
 	var err error
 
 	switch command {
@@ -131,7 +125,7 @@ func (b *BotService) handleCommand(chatId int64, command string) error {
 	return err
 }
 
-func (b *BotService) activateBondsClient(chatId int64) {
+func (b *BotFixer) activateBondsClient(chatId int64) {
 	ticker := time.NewTicker(1 * time.Hour)
 	quit := make(chan struct{}) // Channel to signal immediate stop
 	bondsClient := clients.NewBondsClient()
@@ -147,7 +141,7 @@ func (b *BotService) activateBondsClient(chatId int64) {
 			if b.BondsClientActive {
 				result, err := bondsClient.ProcessSavingBondsOffers()
 				if err != nil {
-					log.Printf("[Bot Service] Failed to get bonds offers: %s", err.Error())
+					log.Printf("[Bot fixer] Failed to get bonds offers: %s", err.Error())
 					b.SendMessage(chatId, "There was an error while processing the bonds offers, sorry :(", nil)
 
 				} else if result > 0 {
@@ -170,7 +164,7 @@ func (b *BotService) activateBondsClient(chatId int64) {
 	}
 }
 
-func (b *BotService) handleButton(query *tgbotapi.CallbackQuery) {
+func (b *BotFixer) handleButton(query *tgbotapi.CallbackQuery) {
 	var text string
 
 	markup := tgbotapi.NewInlineKeyboardMarkup()
@@ -191,26 +185,4 @@ func (b *BotService) handleButton(query *tgbotapi.CallbackQuery) {
 	msg := tgbotapi.NewEditMessageTextAndMarkup(message.Chat.ID, message.MessageID, text, markup)
 	msg.ParseMode = tgbotapi.ModeHTML
 	b.Bot.Send(msg)
-}
-
-func (b *BotService) SendMessage(chatId int64, text string, entities []tgbotapi.MessageEntity) {
-	msg := tgbotapi.NewMessage(chatId, text)
-	if len(entities) > 0 {
-		msg.Entities = entities
-	}
-	msg.ParseMode = tgbotapi.ModeHTML
-	_, err := b.Bot.Send(msg)
-
-	if err != nil {
-		log.Printf("[Bot service] Error sending a message: %s", err.Error())
-	}
-}
-
-func (b *BotService) SendMenu(chatId int64) error {
-	msg := tgbotapi.NewMessage(chatId, firstMenu)
-	msg.ParseMode = tgbotapi.ModeHTML
-	msg.ReplyMarkup = firstMenuMarkup
-	_, err := b.Bot.Send(msg)
-
-	return err
 }

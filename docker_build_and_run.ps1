@@ -20,6 +20,4 @@ docker build -t web_scraper_bot .
 
 # Run the container
 Write-Host "Starting a new container: $containerName"
-docker run --name $containerName --env-file .env web_scraper_bot
-
-Read-Host -Prompt "Press Enter to exit"
+docker run --name $containerName --env-file .env -p 8080:8080 $containerName 

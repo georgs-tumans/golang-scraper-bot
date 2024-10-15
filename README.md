@@ -13,6 +13,7 @@ A Telegram bot with a set of tools originally intended for acquiring whatever da
 - A Telegram bot API key which means you must register a bot. Learn how to do it [here](https://core.telegram.org/bots#how-do-i-create-a-bot).
 - Docker installed (if you want to run this in a container)
 - GO installed (if you want to run it as a regular console app)
+- ngrok running for local development
 
 ## Use
 
@@ -23,10 +24,20 @@ A Telegram bot with a set of tools originally intended for acquiring whatever da
 
 ## Initial setup
 
-Before running, you **must** create an `.env` file; use this [example](/.env.example) to fill out the values.
+1. Run ngrok locally - you will need it for exposing localhost to the internet so that Telegram can reach the bot when running locally (during development). 
 
-Then use [this](/docker_build_and_run.ps1) included powershell script to build and run the bot as a Docker container.
+There is a [powershell script](/docker_run_ngrok.ps1) for hassle free setup of ngrok via Docker but in order to use it:
 
-Afterwards you can use [this other script](/docker_build_and_run.ps1) to run the container without rebuilding the image.
+* Create an ngrok configuration file `ngrok.yml` based on this [template](./ngrok.yml.example)
+* Edit the [script](/docker_run_ngrok.ps1) and set the location of the newly created `ngrok.yml`
+* Run the script
+
+You will need to know the ngrok generated URL that tunnels your locally run app to the internet - open `http://localhost:4040/status` in a browser to view the ngrok panel
+
+2. Create an `.env` file; use this [example](/.env.example) to fill out the values.
+
+3. Use [this](/docker_build_and_run.ps1) included powershell script to build (or rebuild) and run the bot as a Docker container.
+
+Afterwards you can use [this other script](/docker_run.ps1) to run the container without rebuilding the image.
 
 Also, you can press `F5` if using VS Code to run via a launch profile or just use the CMD command `go run main.go` in the root of the project.
