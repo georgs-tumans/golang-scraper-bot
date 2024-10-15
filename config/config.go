@@ -14,6 +14,7 @@ type Configuration struct {
 	BondsRateThreshold float64
 	BotAPIKey          string
 	WebhookURL         string
+	Port               string
 }
 
 var config *Configuration
@@ -31,6 +32,7 @@ func GetConfig() *Configuration {
 			BondsViewURL:       os.Getenv("BONDS_VIEW_URL"),
 			BotAPIKey:          os.Getenv("BOT_API_KEY"),
 			WebhookURL:         os.Getenv("WEBHOOK_URL"),
+			Port:               os.Getenv("PORT"),
 		}
 
 		if rate, rateErr := strconv.ParseFloat(os.Getenv("BONDS_RATE_THRESHOLD"), 64); rateErr != nil {

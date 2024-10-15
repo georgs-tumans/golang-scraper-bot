@@ -70,6 +70,6 @@ func (b *BotFixer) InitializeBotWebhook() {
 
 	http.HandleFunc("/webhook", b.webhookHandler)
 
-	log.Println("[Bot fixer] Starting server on port 8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Println("[Bot fixer] Starting server on port " + b.Config.Port)
+	log.Fatal(http.ListenAndServe(":"+b.Config.Port, nil))
 }
