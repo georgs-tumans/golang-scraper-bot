@@ -17,6 +17,8 @@ func (b *BotFixer) SendMessage(chatId int64, text string, entities []tgbotapi.Me
 	if err != nil {
 		log.Printf("[Bot fixer] Error sending a message: %s", err.Error())
 	}
+
+	log.Printf("[Bot fixer] Sent message to chat: %d.Message: %s", chatId, text)
 }
 
 func (b *BotFixer) SendMenu(chatId int64) error {

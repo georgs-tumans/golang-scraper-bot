@@ -15,6 +15,7 @@ type BotFixer struct {
 	Bot               *tgbotapi.BotAPI
 	Config            *config.Configuration
 	BondsClientActive bool
+	BondsHandler      *BondsHandler
 	TelegramBotAPI    string
 }
 
@@ -48,7 +49,7 @@ func (b *BotFixer) InitializeBotLongPolling() {
 	updates := b.Bot.GetUpdatesChan(u)
 
 	// Pass cancellable context to goroutine
-	go b.receiveUpdates(ctx, updates)
+	go b.longPollingHandler(ctx, updates)
 
 	// Tell the user the bot is online
 	log.Println("[Bot fixer] Bot initialized via the long polling approach; listening for updates")
