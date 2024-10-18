@@ -26,3 +26,4 @@ go.work.sum
 todo.txt
 golang_web_scraper.log
 golang_web_scraper_bot.log
+ngrok.yml

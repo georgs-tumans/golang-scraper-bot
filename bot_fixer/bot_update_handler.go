@@ -34,16 +34,7 @@ func (b *BotFixer) webhookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Handle the update
-	if update.Message != nil {
-		chatID := update.Message.Chat.ID
-		text := update.Message.Text
-
-		// Reply with the same text
-		msg := tgbotapi.NewMessage(chatID, "You said: "+text)
-		if _, err := b.Bot.Send(msg); err != nil {
-			log.Printf("[Bot fixer] Failed to send message: %v", err)
-		}
-	}
+	b.handleUpdate(update)
 
 	// Respond with a 200 OK status to Telegram
 	w.WriteHeader(http.StatusOK)
