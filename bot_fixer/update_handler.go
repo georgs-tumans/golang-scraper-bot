@@ -30,8 +30,6 @@ func (b *BotFixer) webhookHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	b.BondsHandler = NewBondsHandler(b)
-
 	// Handle the update
 	b.handleUpdate(update)
 
@@ -40,7 +38,6 @@ func (b *BotFixer) webhookHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (b *BotFixer) longPollingHandler(ctx context.Context, updates tgbotapi.UpdatesChannel) {
-	b.BondsHandler = NewBondsHandler(b)
 	// `for {` means the loop is infinite until we manually stop it
 	for {
 		select {

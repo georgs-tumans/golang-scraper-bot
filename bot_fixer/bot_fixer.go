@@ -32,6 +32,8 @@ func NewBotFixer() *BotFixer {
 		return nil
 	}
 
+	botFixer.BondsHandler = NewBondsHandler(botFixer)
+
 	return botFixer
 }
 
