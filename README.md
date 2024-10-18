@@ -22,7 +22,7 @@ Fetches data about the current interest rates of the government issued savings b
 - A Telegram bot API key which means you must register a bot. Learn how to do it [here](https://core.telegram.org/bots#how-do-i-create-a-bot).
 - Docker installed (if you want to run this in a container)
 - GO installed (if you want to run it as a regular console app)
-- ngrok running for local development
+- ngrok running for local development (if using the webhooks approach)
 
 ## Use
 
@@ -32,6 +32,25 @@ Fetches data about the current interest rates of the government issued savings b
 
 
 ## Initial setup
+
+### The default approach
+
+The default approach is when the bot determines whether to initialize with webhooks or long polling based on the value of the `ENVIROMENT` environment variable (see the Development section) upon starting.
+
+If case of local development follow these steps:
+
+1. Create an `.env` file; use this [example](/.env.example) to fill out the values.
+
+2. Use [this](/docker_build_and_run.ps1) included powershell script to build (or rebuild) and run the bot as a Docker container.
+
+Afterwards you can use [this other script](/docker_run.ps1) to run the container without rebuilding the image.
+
+Also, you can press `F5` if using VS Code to run via a launch profile or just use the CMD command `go run main.go` in the root of the project.
+
+In other cases, see below.
+
+
+### Using the webhooks approach (for testing/modifying webhook initialization)
 
 1. Run ngrok locally - you will need it for exposing localhost to the internet so that Telegram can reach the bot when running locally (during development). 
 
@@ -48,8 +67,6 @@ You will need to know the ngrok generated URL that tunnels your locally run app 
 3. Use [this](/docker_build_and_run.ps1) included powershell script to build (or rebuild) and run the bot as a Docker container.
 
 Afterwards you can use [this other script](/docker_run.ps1) to run the container without rebuilding the image.
-
-Also, you can press `F5` if using VS Code to run via a launch profile or just use the CMD command `go run main.go` in the root of the project.
 
 
 ## Development
