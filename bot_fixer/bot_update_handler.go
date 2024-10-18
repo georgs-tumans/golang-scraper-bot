@@ -10,9 +10,12 @@ import (
 	"strings"
 	"time"
 	"web_scraper_bot/clients"
+	"web_scraper_bot/utilities"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
+
+var bondsClient *clients.BondsClient
 
 func (b *BotFixer) webhookHandler(w http.ResponseWriter, r *http.Request) {
 
@@ -89,17 +92,31 @@ func (b *BotFixer) handleMessage(message *tgbotapi.Message) {
 // When we get a command, we react accordingly
 func (b *BotFixer) handleCommand(chatId int64, command string) error {
 	var err error
+	var param string
 
-	switch command {
+	// Some commands may have parameters
+	commandParts := strings.Split(command, " ")
+	mainCommand := commandParts[0]
+
+	if len(commandParts) > 1 {
+		param = commandParts[1]
+	}
+
+	switch mainCommand {
 
 	case "/menu":
 		err = b.SendMenu(chatId)
+
+	case "/delete_webhook":
+		if err := b.DeleteWebhook(); err != nil {
+			b.SendMessage(chatId, "Failed to delete webhook", nil)
+		}
 
 	case "/bonds_start":
 		if !b.BondsClientActive {
 			b.BondsClientActive = true
 			b.SendMessage(chatId, "Savings bonds client has been started", nil)
-			go b.activateBondsClient(chatId) // Run in a separate goroutine
+			go b.activateBondsClient(chatId, 0) // Run in a separate goroutine
 		} else {
 			b.SendMessage(chatId, "Savings bonds client is already running", nil)
 		}
@@ -111,15 +128,45 @@ func (b *BotFixer) handleCommand(chatId int64, command string) error {
 		} else {
 			b.SendMessage(chatId, "Savings bonds client is not running", nil)
 		}
+
+	case "/bonds_status":
+		if b.BondsClientActive {
+			var builder strings.Builder
+			builder.WriteString("Savings bonds client is currently running\n\n")
+			builder.WriteString("Start time: " + bondsClient.ClientStartTimestamp.Format("02.01.2006 15:04") + "\n\n")
+			builder.WriteString(bondsClient.FormatOffersMessage())
+
+			b.SendMessage(chatId, builder.String(), nil)
+		} else {
+			b.SendMessage(chatId, "Savings bonds client is currently not running", nil)
+		}
+
+	// TODO: implement update interval validations
+	case "/bonds_set_interval":
+		if param != "" {
+			interval, err := utilities.ParseDurationWithDays(param)
+			if err != nil {
+				b.SendMessage(chatId, "Invalid interval value. Available interval types: 'm'(minute), 'h'(hour), 'd'(day)", nil)
+
+				return err
+			}
+
+			b.BondsClientActive = false
+			b.BondsClientActive = true
+			go b.activateBondsClient(chatId, interval)
+			b.SendMessage(chatId, fmt.Sprintf("Bonds client has been restarted and the run interval updated"), nil)
+		} else {
+			b.SendMessage(chatId, "Please provide an interval value string in the format <amount><type>.\nExample: 1m, 2h, 1d\nAvailable interval types: 'm'(minute), 'h'(hour), 'd'(day)", nil)
+		}
 	}
 
 	return err
 }
 
-func (b *BotFixer) activateBondsClient(chatId int64) {
-	ticker := time.NewTicker(1 * time.Hour)
+func (b *BotFixer) activateBondsClient(chatId int64, runInterval time.Duration) {
+	bondsClient = clients.NewBondsClient(runInterval)
+	ticker := time.NewTicker(bondsClient.RunInterval)
 	quit := make(chan struct{}) // Channel to signal immediate stop
-	bondsClient := clients.NewBondsClient()
 
 	defer func() {
 		ticker.Stop()

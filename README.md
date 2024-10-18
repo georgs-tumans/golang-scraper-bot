@@ -41,3 +41,18 @@ You will need to know the ngrok generated URL that tunnels your locally run app 
 Afterwards you can use [this other script](/docker_run.ps1) to run the container without rebuilding the image.
 
 Also, you can press `F5` if using VS Code to run via a launch profile or just use the CMD command `go run main.go` in the root of the project.
+
+
+## Development
+
+In order to develop and run the bot locally via you IDE you must set the environmental variable `ENVIROMENT` to `local`. When running the bot, this will result in automatic deletion of any webhooks registered for the given Telegram bot API key and switching to the long polling approach which works much better for local development.
+
+However, if you need to run the bot in a container or host it somewhere, it is recommended to set the `ENVIROMENT` to `cloud`/`docker` which will the register a new webhook upon instantiation and use that for getting updates.
+
+**NB**
+
+You cannot run the bot in the long polling mode while there are actively registered webhooks for the same bot API key!
+
+## Deployment
+
+The bot is currently hosted on Google Apps; pushing to `master` triggers a build.

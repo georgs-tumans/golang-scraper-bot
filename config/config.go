@@ -15,6 +15,8 @@ type Configuration struct {
 	BotAPIKey          string
 	WebhookURL         string
 	Port               string
+	Environment        string
+	BondsRunInterval   string
 }
 
 var config *Configuration
@@ -33,12 +35,18 @@ func GetConfig() *Configuration {
 			BotAPIKey:          os.Getenv("BOT_API_KEY"),
 			WebhookURL:         os.Getenv("WEBHOOK_URL"),
 			Port:               os.Getenv("PORT"),
+			Environment:        os.Getenv("ENVIRONMENT"),
+			BondsRunInterval:   os.Getenv("BONDS_RUN_INTERVAL"),
 		}
 
 		if rate, rateErr := strconv.ParseFloat(os.Getenv("BONDS_RATE_THRESHOLD"), 64); rateErr != nil {
 			log.Fatalf("[GetConfig] Error parsing BONDS_RATE_THRESHOLD")
 		} else {
 			config.BondsRateThreshold = rate
+		}
+
+		if config.BondsRunInterval == "" {
+			config.BondsRunInterval = "1h"
 		}
 
 		// For debugging purposes

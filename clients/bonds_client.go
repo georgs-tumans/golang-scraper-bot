@@ -4,14 +4,21 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
+	"time"
 	"web_scraper_bot/config"
 	"web_scraper_bot/services"
+	"web_scraper_bot/utilities"
 )
 
 type BondsClient struct {
-	BondsDataSourceURL string
-	BondsViewURL       string
-	BondsRateThreshold float64
+	BondsDataSourceURL   string
+	BondsViewURL         string
+	BondsRateThreshold   float64
+	ClientStartTimestamp time.Time
+	LastRunTimestamp     time.Time
+	LastBondsOffers      *OffersResponse
+	RunInterval          time.Duration
 }
 
 type Offer struct {
@@ -21,14 +28,26 @@ type Offer struct {
 
 type OffersResponse []*Offer
 
-func NewBondsClient() *BondsClient {
+func NewBondsClient(runInterval time.Duration) *BondsClient {
 	config := config.GetConfig()
 
-	return &BondsClient{
-		BondsDataSourceURL: config.BondsDataSourceURL,
-		BondsViewURL:       config.BondsViewURL,
-		BondsRateThreshold: config.BondsRateThreshold,
+	newClient := &BondsClient{
+		BondsDataSourceURL:   config.BondsDataSourceURL,
+		BondsViewURL:         config.BondsViewURL,
+		BondsRateThreshold:   config.BondsRateThreshold,
+		ClientStartTimestamp: time.Now(),
+		RunInterval:          runInterval,
 	}
+
+	if runInterval == 0 {
+		runInterval, err := utilities.ParseDurationWithDays(config.BondsRunInterval)
+		if err != nil {
+			log.Fatalf("[NewBondsClient] Failed to parse bonds client run interval: %v", err)
+		}
+		newClient.RunInterval = runInterval
+	}
+
+	return newClient
 }
 
 func (c *BondsClient) getBondsOffers() (*OffersResponse, error) {
@@ -39,6 +58,8 @@ func (c *BondsClient) getBondsOffers() (*OffersResponse, error) {
 		return nil, err
 	}
 
+	c.LastBondsOffers = offersResponse
+	c.LastRunTimestamp = time.Now()
 	responseJsonString, err := json.Marshal(offersResponse)
 	if err != nil {
 		log.Println("[getBondsOffers] Failed to marshal response", err)
@@ -64,4 +85,18 @@ func (c *BondsClient) ProcessSavingBondsOffers() (float64, error) {
 	}
 
 	return 0, nil
+}
+
+func (c *BondsClient) FormatOffersMessage() string {
+	if c.LastBondsOffers == nil {
+		return ""
+	}
+
+	var builder strings.Builder
+	builder.WriteString("Latest updates (" + c.LastRunTimestamp.Format("02.01.2006 15:04") + "):\n")
+	for _, offer := range *c.LastBondsOffers {
+		builder.WriteString(fmt.Sprintf("Period: %d months, Interest rate: %.2f%%\n", offer.Period, offer.InterestRate))
+	}
+
+	return builder.String()
 }

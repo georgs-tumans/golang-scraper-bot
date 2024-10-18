@@ -4,7 +4,9 @@ import (
 	"context"
 	"log"
 	"net/http"
+	models "web_scraper_bot/bot_fixer/models"
 	"web_scraper_bot/config"
+	"web_scraper_bot/services"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -13,21 +15,23 @@ type BotFixer struct {
 	Bot               *tgbotapi.BotAPI
 	Config            *config.Configuration
 	BondsClientActive bool
+	TelegramBotAPI    string
 }
 
 func NewBotFixer() *BotFixer {
-	botService := &BotFixer{
-		Config: config.GetConfig(),
+	botFixer := &BotFixer{
+		Config:         config.GetConfig(),
+		TelegramBotAPI: "https://api.telegram.org/bot",
 	}
 
 	var err error
-	botService.Bot, err = tgbotapi.NewBotAPI(botService.Config.BotAPIKey)
+	botFixer.Bot, err = tgbotapi.NewBotAPI(botFixer.Config.BotAPIKey)
 	if err != nil {
 		log.Panic(err)
 		return nil
 	}
 
-	return botService
+	return botFixer
 }
 
 func (b *BotFixer) InitializeBotLongPolling() {
@@ -47,7 +51,7 @@ func (b *BotFixer) InitializeBotLongPolling() {
 	go b.receiveUpdates(ctx, updates)
 
 	// Tell the user the bot is online
-	log.Println("[Bot fixer] Listening for updates.")
+	log.Println("[Bot fixer] Bot initialized via the long polling approach; listening for updates")
 
 	select {}
 }
@@ -71,5 +75,20 @@ func (b *BotFixer) InitializeBotWebhook() {
 	http.HandleFunc("/webhook", b.webhookHandler)
 
 	log.Println("[Bot fixer] Starting server on port " + b.Config.Port)
+	log.Println("[Bot fixer] Bot initialized via the webhook approach; listening for updates")
 	log.Fatal(http.ListenAndServe(":"+b.Config.Port, nil))
+}
+
+func (b *BotFixer) DeleteWebhook() error {
+	url := b.TelegramBotAPI + b.Config.BotAPIKey + "/deleteWebhook"
+	response := &models.TelegramBotAPIResponse{}
+	err := services.GetRequest(url, response)
+	if err != nil {
+		log.Fatalf("[Bot fixer] Error deleting webhook: %v", err)
+		return err
+	}
+
+	log.Println("[Bot fixer] Webhook deleted")
+
+	return nil
 }
