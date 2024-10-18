@@ -6,7 +6,16 @@ A Telegram bot with a set of tools originally intended for acquiring whatever da
 
 ## Available tools/functionality
 
- - Fetching data about the current interest rates of the government issued savings bonds of the Republic of Latvia notifying the user in case the 12 months bonds interest rate is equal or higher than the desired configured value.
+### Savings bonds data
+
+Fetches data about the current interest rates of the government issued savings bonds of the Republic of Latvia notifying the user in case the 12 months bonds interest rate is equal or higher than the desired configured value.
+
+ Available commands:
+
+ - `/bonds_start` - starts up the bonds client
+ - `/bonds_stop` - stops the bonds client
+ - `/bonds_status` - gives the bonds client status
+ - `/bonds_set_interval <number><interval type>` - sets the interval at which bonds data will be fetched. Example command: `/bonds_set_interval 1h`. Available interval types: 'm'(minute), 'h'(hour), 'd'(day)
 
 ## Preconditions
 
@@ -49,8 +58,7 @@ In order to develop and run the bot locally via you IDE you must set the environ
 
 However, if you need to run the bot in a container or host it somewhere, it is recommended to set the `ENVIROMENT` to `cloud`/`docker` which will the register a new webhook upon instantiation and use that for getting updates.
 
-**NB**
-
+**NB**:
 You cannot run the bot in the long polling mode while there are actively registered webhooks for the same bot API key!
 
 ## Deployment

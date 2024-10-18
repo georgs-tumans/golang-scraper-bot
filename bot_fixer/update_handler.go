@@ -107,11 +107,6 @@ func (b *BotFixer) handleCommand(chatId int64, command string) error {
 	case "/menu":
 		err = b.SendMenu(chatId)
 
-	case "/delete_webhook":
-		if err := b.DeleteWebhook(); err != nil {
-			b.SendMessage(chatId, "Failed to delete webhook", nil)
-		}
-
 	case "/bonds_start":
 		if !b.BondsClientActive {
 			b.BondsClientActive = true
@@ -134,6 +129,7 @@ func (b *BotFixer) handleCommand(chatId int64, command string) error {
 			var builder strings.Builder
 			builder.WriteString("Savings bonds client is currently running\n\n")
 			builder.WriteString("Start time: " + bondsClient.ClientStartTimestamp.Format("02.01.2006 15:04") + "\n\n")
+			builder.WriteString("Current run interval: " + bondsClient.RunInterval.String() + "\n\n")
 			builder.WriteString(bondsClient.FormatOffersMessage())
 
 			b.SendMessage(chatId, builder.String(), nil)
@@ -141,7 +137,6 @@ func (b *BotFixer) handleCommand(chatId int64, command string) error {
 			b.SendMessage(chatId, "Savings bonds client is currently not running", nil)
 		}
 
-	// TODO: implement update interval validations
 	case "/bonds_set_interval":
 		if param != "" {
 			interval, err := utilities.ParseDurationWithDays(param)
@@ -154,9 +149,14 @@ func (b *BotFixer) handleCommand(chatId int64, command string) error {
 			b.BondsClientActive = false
 			b.BondsClientActive = true
 			go b.activateBondsClient(chatId, interval)
-			b.SendMessage(chatId, fmt.Sprintf("Bonds client has been restarted and the run interval updated"), nil)
+			b.SendMessage(chatId, "Bonds client has been restarted and the run interval updated", nil)
 		} else {
-			b.SendMessage(chatId, "Please provide an interval value string in the format <amount><type>.\nExample: 1m, 2h, 1d\nAvailable interval types: 'm'(minute), 'h'(hour), 'd'(day)", nil)
+			var builder strings.Builder
+			builder.WriteString("Invalid command: missing the interval value\n\n")
+			builder.WriteString("Correct command use example:\n <code>/bonds_set_interval 5m</code>\n\n")
+			builder.WriteString("Available interval types: 'm'(minute), 'h'(hour), 'd'(day)")
+			b.SendMessage(chatId, builder.String(), nil)
+			err = fmt.Errorf("interval_value_required")
 		}
 	}
 
