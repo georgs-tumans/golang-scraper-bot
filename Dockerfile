@@ -14,11 +14,17 @@ RUN go build -o web_scraper_bot .
 # Step 5: Use a smaller image for the final build
 FROM alpine:latest
 
+# Install timezone data
+RUN apk add --no-cache tzdata
+
 # Step 6: Set the working directory in the new smaller image
 WORKDIR /root/
 
 # Step 7: Copy the built Go binary from the build stage
 COPY --from=build /app/web_scraper_bot .
+
+# Step 8: Set timezone from environment variable (default to UTC if not provided)
+ENV TZ=${TZ:-UTC}
 
 # Step 9: Run the Go app
 CMD ["./web_scraper_bot"]
