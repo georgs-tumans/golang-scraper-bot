@@ -141,9 +141,10 @@ func (bh *BondsHandler) handleBondsSetInterval(chatId int64, param string) error
 		}
 
 		bh.BondsClientActive = false
+		time.Sleep(3 * time.Second) // Wait for the client to stop
 		bh.BondsClientActive = true
-		go bh.activateBondsClient(chatId, interval)
 		bh.BotFixer.SendMessage(chatId, "Bonds client has been restarted and the run interval updated", nil)
+		go bh.activateBondsClient(chatId, interval)
 	} else {
 		var builder strings.Builder
 		builder.WriteString("Invalid command: missing the interval value\n\n")
