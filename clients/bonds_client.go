@@ -103,3 +103,10 @@ func (c *BondsClient) FormatOffersMessage() string {
 
 	return builder.String()
 }
+
+func (c *BondsClient) StopTicker() {
+	if c.Ticker != nil {
+		c.Ticker.Stop()
+		c.Ticker = nil
+	}
+}

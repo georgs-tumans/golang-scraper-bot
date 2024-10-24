@@ -70,18 +70,16 @@ func (bh *BondsHandler) handleBondsStart(chatId int64) {
 func (bh *BondsHandler) activateBondsClient(chatId int64, runInterval time.Duration) {
 	if bh.BondsClient != nil && bh.BondsClient.Ticker != nil {
 		log.Println("[BondsHandler] Stopping existing ticker")
-		bh.BondsClient.Ticker.Stop()
+		bh.BondsClient.StopTicker()
 	}
 
 	bh.BondsClient = clients.NewBondsClient(runInterval)
-	ticker := bh.BondsClient.Ticker
-
 	quit := make(chan struct{}) // Channel to signal immediate stop
 
 	go func() {
 		for {
 			select {
-			case <-ticker.C:
+			case <-bh.BondsClient.Ticker.C:
 				if bh.BondsClientActive {
 					result, err := bh.BondsClient.ProcessSavingBondsOffers()
 					if err != nil {
@@ -101,8 +99,7 @@ func (bh *BondsHandler) activateBondsClient(chatId int64, runInterval time.Durat
 				}
 			case <-quit:
 				log.Println("[BondsHandler] Stopping bonds client")
-				ticker.Stop()
-				bh.BondsClient.Ticker = nil
+				bh.BondsClient.StopTicker()
 
 				return
 			}
@@ -143,7 +140,7 @@ func (bh *BondsHandler) handleBondsSetInterval(chatId int64, param string) error
 		}
 
 		bh.BondsClientActive = false
-		time.Sleep(3 * time.Second) // Wait for the client to stop
+		time.Sleep(2 * time.Second) // Wait for the client to stop
 		bh.BondsClientActive = true
 		bh.BotFixer.SendMessage(chatId, "Bonds client has been restarted and the run interval updated", nil)
 		go bh.activateBondsClient(chatId, interval)
