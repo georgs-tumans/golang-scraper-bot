@@ -68,44 +68,46 @@ func (bh *BondsHandler) handleBondsStart(chatId int64) {
 }
 
 func (bh *BondsHandler) activateBondsClient(chatId int64, runInterval time.Duration) {
+	if bh.BondsClient != nil && bh.BondsClient.Ticker != nil {
+		log.Println("[BondsHandler] Stopping existing ticker")
+		bh.BondsClient.Ticker.Stop()
+	}
+
 	bh.BondsClient = clients.NewBondsClient(runInterval)
-	ticker := time.NewTicker(bh.BondsClient.RunInterval)
+	ticker := bh.BondsClient.Ticker
+
 	quit := make(chan struct{}) // Channel to signal immediate stop
 
-	defer func() {
-		ticker.Stop()
-		close(quit)
-	}()
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				if bh.BondsClientActive {
+					result, err := bh.BondsClient.ProcessSavingBondsOffers()
+					if err != nil {
+						log.Printf("[BondsHandler] Error while processing bonds offers: %s", err.Error())
+						bh.BotFixer.SendMessage(chatId, "Error processing bonds offers", nil)
+					} else if result > 0 {
+						log.Println("[BondsHandler] Notifying the user about the desired interest rate")
+						timeNow := time.Now()
 
-	for {
-		select {
-		case <-ticker.C:
-			if bh.BondsClientActive {
-				result, err := bh.BondsClient.ProcessSavingBondsOffers()
-				if err != nil {
-					log.Printf("[BondsHandler] Failed to get bonds offers: %s", err.Error())
-					bh.BotFixer.SendMessage(chatId, "There was an error while processing the bonds offers, sorry :(", nil)
+						var builder strings.Builder
+						builder.WriteString("<b>12 months savings bonds interest rate has reached the desired value!</b> \n\n")
+						builder.WriteString(fmt.Sprintf("The current interest rate (%s): <strong> %.2f%% </strong>\n\n", timeNow.Format("02.01.2006 15:04"), result))
+						builder.WriteString(fmt.Sprintf("<a href='%s'> View in browser </a>", bh.BotFixer.Config.BondsViewURL))
 
-				} else if result > 0 {
-					log.Println("[BondsHandler] Notifying the user about the desired interest rate")
-					timeNow := time.Now()
-					message := "<b>12 months savings bonds interest rate has reached the desired value!</b> \n\n" +
-						"The current interest rate (" + timeNow.Format("02.01.2006 15:04") + "): <strong>" + fmt.Sprintf("%.2f", result) + "%</strong>\n\n" +
-						"<a href='" + bh.BotFixer.Config.BondsViewURL + "'>Buy bonds</a>"
-
-					bh.BotFixer.SendMessage(chatId, message, nil)
+						bh.BotFixer.SendMessage(chatId, builder.String(), nil)
+					}
 				}
-			}
-		case <-quit:
-			log.Println("[BondsHandler] Stopping the bonds client")
-			return
-		}
+			case <-quit:
+				log.Println("[BondsHandler] Stopping bonds client")
+				ticker.Stop()
+				bh.BondsClient.Ticker = nil
 
-		// Break the loop if the bondsClientActive flag is set to false
-		if !bh.BondsClientActive {
-			quit <- struct{}{}
+				return
+			}
 		}
-	}
+	}()
 }
 
 func (bh *BondsHandler) handleBondsStop(chatId int64) {

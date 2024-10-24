@@ -19,6 +19,7 @@ type BondsClient struct {
 	LastRunTimestamp     time.Time
 	LastBondsOffers      *OffersResponse
 	RunInterval          time.Duration
+	Ticker               *time.Ticker
 }
 
 type Offer struct {
@@ -46,6 +47,8 @@ func NewBondsClient(runInterval time.Duration) *BondsClient {
 		}
 		newClient.RunInterval = runInterval
 	}
+
+	newClient.Ticker = time.NewTicker(newClient.RunInterval)
 
 	return newClient
 }
