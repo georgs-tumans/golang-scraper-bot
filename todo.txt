@@ -1,0 +1,29 @@
+- host somewhere else
+- regularitātes konfigurācija caur bota saskarni
+- vēlamās procentu likmes konfigurācija caur bota saskarni
+- emojis?
+- pamēģināt entities messagiem
+
+
+API request handler:
+
+Vajadzības:
+- Norādīt jebkādus URL + lauku, kas jāvērtē no saņemtās atbildes struktūras + vērtība, pie kuras jāapziņo lietotājs + izsaukuma regularitātes norādīšana
+- Palaist/apturēt jebkuru URL trackingu neatkarīgi no citiem ar komandu (vēlāk arī saskarni)
+- Nodrošināt, ka katram URL var pieslēgt unikālu izsaukuma atbildes handleri (ignorējot .env norādīto ceļu atbildes objektā)
+- Nodrošināt komandu, kas ļauj mainīt vērtību, pie kuras jāsūta paziņojumi
+- Viena komanda, kas katram handlerim/klientam izdrukā visas pieejamās komandas rakstiski (lai ērtāk lietot, kamēr nav GUI)
+
+Realizācijas aspekti:
+- Katram URL env variabļos jāpieliek arī kods, kurš tiks izmantots bota komandām
+- env. variabļa struktūra: "[{'code': 'bonds', 'url': 'https://www.krajobligacijas.lv/api/offers/today', interval: '1h', notifyValue: '3.5', responsePath: '#(period==12).interestRate'}]"
+- atbildes struktūras lasīšanai izmantosim gjson bibliotēku (https://github.com/tidwall/gjson), tātad env responsePath tas jāņem vērā un ja jāapstrādā json lists - jānorāda attiecīgi
+
+Vajadzīgās komandas:
+- /list - visas pieejamās komandas
+- /status - visi handleri un to statuss - palaists/apturēts (derētu pogas ar kurām var gan startēt gan apturēt katru handleri)
+- /<code>_start - palaiž handleri ar padoto vai defaulto intervālu
+- /<code>_stop - aptur handleri
+- /<code>_status - handlera statuss
+- /<code>_interval - uzstāda handlera intervālu
+- /<code>_value - uzstāda handlera mērķa vērtību

@@ -23,7 +23,6 @@ go.work.sum
 
 # env file
 .env
-todo.txt
 golang_web_scraper.log
 golang_web_scraper_bot.log
 ngrok.yml
