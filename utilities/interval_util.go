@@ -12,6 +12,10 @@ import (
 //
 // Will default to 24 hours when failing to parse a duration ending with "d".
 func ParseDurationWithDays(s string) (time.Duration, error) {
+	if s == "" {
+		return 0, errors.New("empty_interval_value")
+	}
+
 	intervalType := extractLetter(s)
 	if intervalType != "m" && intervalType != "h" && intervalType != "d" {
 		return 0, errors.New("invalid_interval_value")

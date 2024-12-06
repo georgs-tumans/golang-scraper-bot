@@ -8,6 +8,14 @@ import (
 	"github.com/joho/godotenv"
 )
 
+type Tracker struct {
+	Code         string  `json:"code"`
+	URL          string  `json:"url"`
+	Interval     string  `json:"interval"`
+	NotifyValue  float64 `json:"notifyValue"`
+	ResponsePath string  `json:"responsePath"`
+}
+
 type Configuration struct {
 	BondsDataSourceURL string
 	BondsViewURL       string
@@ -17,6 +25,8 @@ type Configuration struct {
 	Port               string
 	Environment        string
 	BondsRunInterval   string
+	APITrackers        []*Tracker
+	ScraperTrackers    []*Tracker
 }
 
 var config *Configuration
@@ -48,6 +58,8 @@ func GetConfig() *Configuration {
 		if config.BondsRunInterval == "" {
 			config.BondsRunInterval = "1h"
 		}
+
+		// TODO: Load trackers from the environment
 
 		// For debugging purposes
 		// configJSON, err := json.MarshalIndent(config, "", "  ")

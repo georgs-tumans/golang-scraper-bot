@@ -3,6 +3,7 @@
 - vēlamās procentu likmes konfigurācija caur bota saskarni
 - emojis?
 - pamēģināt entities messagiem
+- kas notiek ar configu - vai getConfig katru reizi lādē no jauna no OS?
 
 
 API request handler:
@@ -16,8 +17,10 @@ Vajadzības:
 
 Realizācijas aspekti:
 - Katram URL env variabļos jāpieliek arī kods, kurš tiks izmantots bota komandām
-- env. variabļa struktūra: "[{'code': 'bonds', 'url': 'https://www.krajobligacijas.lv/api/offers/today', interval: '1h', notifyValue: '3.5', responsePath: '#(period==12).interestRate'}]"
+- Laikam divi env variabļi: json saraksts ar linkiem, ko apstrādās no API un json saraksts ar linkiem, kas jāapstrādā scraperim
+- env. variabļa struktūra: "[{'code': 'bonds', 'url': 'https://www.krajobligacijas.lv/api/offers/today', 'interval': '1h', 'notifyValue': '3.5', 'responsePath': '#(period==12).interestRate'}]"
 - atbildes struktūras lasīšanai izmantosim gjson bibliotēku (https://github.com/tidwall/gjson), tātad env responsePath tas jāņem vērā un ja jāapstrādā json lists - jānorāda attiecīgi
+
 
 Vajadzīgās komandas:
 - /list - visas pieejamās komandas
