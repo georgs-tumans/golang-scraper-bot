@@ -73,24 +73,21 @@ func (b *BotFixer) handleMessage(message *tgbotapi.Message) {
 
 	log.Printf("[Bot fixer] %s wrote %s", user.FirstName, text)
 
-	var err error
 	if strings.HasPrefix(text, "/") {
-		err = b.handleCommand(message.Chat.ID, text)
-	}
+		// err = b.handleCommand(message.Chat.ID, text)
+		if err := b.CommandHandler.HandleCommand(message.Chat.ID, text); err != nil {
+			log.Printf("[Bot fixer] An error occured while handling command: %s", err.Error())
 
-	if err != nil {
-		log.Printf("[Bot fixer] An error occured while handlind message: %s", err.Error())
+			return
+		}
 	}
 }
 
-// When we get a command, we react accordingly
-// TODO: create a handler interface to add a list of handlers to the BotFixer
-// and then loop through it here to handle the different commands
-func (b *BotFixer) handleCommand(chatId int64, command string) error {
-	err := b.BondsHandler.HandleBondsCommand(chatId, command)
+// func (b *BotFixer) handleCommand(chatId int64, command string) error {
+// 	err := b.BondsHandler.HandleBondsCommand(chatId, command)
 
-	return err
-}
+// 	return err
+// }
 
 func (b *BotFixer) handleButton(query *tgbotapi.CallbackQuery) {
 	var text string

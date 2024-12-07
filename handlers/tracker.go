@@ -23,6 +23,7 @@ type Tracker struct {
 	Context  context.Context
 	Cancel   context.CancelFunc
 	Behavior TrackerBehavior
+	running  bool
 }
 
 /*
@@ -53,7 +54,13 @@ func CreateTracker(code string, runInterval time.Duration, config *config.Config
 }
 
 func (t *Tracker) Start() {
+	if t.running {
+		return
+	}
+	t.running = true
+
 	go func() {
+		defer func() { t.running = false }()
 		for {
 			select {
 			case <-t.Ticker.C:
@@ -69,6 +76,10 @@ func (t *Tracker) Start() {
 }
 
 func (t *Tracker) Stop() {
+	if !t.running {
+		return
+	}
+
 	t.Ticker.Stop()
 	t.Cancel()
 }

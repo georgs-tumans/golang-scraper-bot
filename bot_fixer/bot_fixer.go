@@ -6,6 +6,7 @@ import (
 	"net/http"
 	models "web_scraper_bot/bot_fixer/models"
 	"web_scraper_bot/config"
+	"web_scraper_bot/handlers"
 	"web_scraper_bot/services"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -16,6 +17,7 @@ type BotFixer struct {
 	Config            *config.Configuration
 	BondsClientActive bool
 	BondsHandler      *BondsHandler
+	CommandHandler    *handlers.CommandHandler
 	TelegramBotAPI    string
 }
 
@@ -23,6 +25,7 @@ func NewBotFixer() *BotFixer {
 	botFixer := &BotFixer{
 		Config:         config.GetConfig(),
 		TelegramBotAPI: "https://api.telegram.org/bot",
+		CommandHandler: handlers.NewCommandHandler(),
 	}
 
 	var err error
