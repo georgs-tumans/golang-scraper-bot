@@ -1,55 +1,12 @@
 package handlers
 
 import (
-	"context"
 	"log"
 	"strings"
 	"sync"
-	"time"
 	"web_scraper_bot/config"
 	"web_scraper_bot/utilities"
 )
-
-const (
-	API     = "api"
-	Scraper = "scraper"
-)
-
-// Tracker represents a single URL that the bot will track - either through an API or by scraping a website
-/* TODO
-   - think about reusing one struct for Config and here
-*/
-type Tracker struct {
-	Code    string
-	Ticker  *time.Ticker
-	Context context.Context
-	Cancel  context.CancelFunc
-}
-
-/*
-TODO
-  - add code uniqueness check
-*/
-func CreateTracker(code string, runInterval time.Duration) *Tracker {
-	ctx, cancel := context.WithCancel(context.Background())
-
-	return &Tracker{
-		Code:    code,
-		Ticker:  time.NewTicker(runInterval),
-		Context: ctx,
-		Cancel:  cancel,
-	}
-}
-
-func (t *Tracker) Stop() {
-	t.Ticker.Stop()
-	t.Cancel()
-}
-
-func (t *Tracker) UpdateInterval(newInterval time.Duration) {
-	t.Ticker.Stop()
-	t.Ticker = time.NewTicker(newInterval)
-}
 
 type CommandHandler struct {
 	Config         *config.Configuration
@@ -112,7 +69,16 @@ func (ch *CommandHandler) HandleCommand(chatId int64, commandString string) erro
 func (ch *CommandHandler) handleStart(code string, chatId int64) {
 	if code != "" {
 		if tracker := ch.GetActiveTracker(code); tracker == nil {
-			go ch.startTracker(code, chatId, 0) // Run in a separate goroutine
+			newTracker, err := CreateTracker(code, 0, ch.Config)
+			if err != nil {
+				log.Printf("[CommandHandler] Error creating a new tracker: %s", code)
+				// TODO figure out how to send a message to the user
+				// bh.BotFixer.SendMessage(chatId, "Error creating a new tracker", nil)
+				return
+			}
+			ch.AddRunningTracker(newTracker)
+			newTracker.Start()
+
 			// TODO figure out how to send a message to the user
 			// bh.BotFixer.SendMessage(chatId, "Savings bonds client has been started", nil)
 			log.Printf("[CommandHandler] Starting tracker: %s", code)
@@ -125,26 +91,6 @@ func (ch *CommandHandler) handleStart(code string, chatId int64) {
 	} else {
 		/// General /start command that would run all trackers
 	}
-}
-
-func (ch *CommandHandler) startTracker(code string, chatId int64, runInterval time.Duration) {
-	newTracker := CreateTracker(code, runInterval)
-	ch.AddRunningTracker(newTracker)
-
-	go func() {
-		for {
-			select {
-			case <-newTracker.Ticker.C:
-				// TODO: implement the actual tracker logic here
-				// Will call some other struct with logic to make API calls or scrape a website
-				// Determine what type of tracker do we start - API or Scraper
-				// trackerType := ch.DetermineTrackerType(code)
-			case <-newTracker.Context.Done():
-				log.Printf("[CommandHandler] Tracker '%s' stopped", code)
-				return
-			}
-		}
-	}()
 }
 
 func (ch *CommandHandler) handleStop(code string, chatId int64) {
@@ -199,22 +145,6 @@ func (ch *CommandHandler) handleSetInterval(code string, newIntervalString strin
 }
 
 /******************Utility******************/
-
-func (ch *CommandHandler) DetermineTrackerType(trackerCode string) string {
-	for _, tracker := range ch.Config.APITrackers {
-		if tracker.Code == trackerCode {
-			return API
-		}
-	}
-
-	for _, tracker := range ch.Config.ScraperTrackers {
-		if tracker.Code == trackerCode {
-			return Scraper
-		}
-	}
-
-	return ""
-}
 
 func (ch *CommandHandler) GetActiveTracker(trackerCode string) *Tracker {
 	// So that only one goroutine can access the trackers at a time
