@@ -16,16 +16,15 @@ type BotFixer struct {
 	Bot               *tgbotapi.BotAPI
 	Config            *config.Configuration
 	BondsClientActive bool
-	BondsHandler      *BondsHandler
-	CommandHandler    *handlers.CommandHandler
-	TelegramBotAPI    string
+	//BondsHandler      *BondsHandler
+	CommandHandler *handlers.CommandHandler
+	TelegramBotAPI string
 }
 
 func NewBotFixer() *BotFixer {
 	botFixer := &BotFixer{
 		Config:         config.GetConfig(),
 		TelegramBotAPI: "https://api.telegram.org/bot",
-		CommandHandler: handlers.NewCommandHandler(),
 	}
 
 	var err error
@@ -35,7 +34,8 @@ func NewBotFixer() *BotFixer {
 		return nil
 	}
 
-	botFixer.BondsHandler = NewBondsHandler(botFixer)
+	//botFixer.BondsHandler = NewBondsHandler(botFixer)
+	botFixer.CommandHandler = handlers.NewCommandHandler(botFixer.Bot)
 
 	return botFixer
 }
