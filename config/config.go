@@ -1,32 +1,31 @@
 package config
 
 import (
+	"encoding/json"
 	"log"
 	"os"
-	"strconv"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
 )
 
 type Tracker struct {
-	Code         string  `json:"code"`
-	URL          string  `json:"url"`
-	Interval     string  `json:"interval"`
-	NotifyValue  float64 `json:"notifyValue"`
-	ResponsePath string  `json:"responsePath"`
+	Code           string  `json:"code" validate:"required"`
+	APIURL         string  `json:"apiUrl" validate:"required,url"`
+	ViewURL        string  `json:"viewUrl" validate:"omitempty,url"`
+	Interval       string  `json:"interval" validate:"required"`
+	NotifyValue    float64 `json:"notifyValue" validate:"required,numeric"`
+	NotifyCriteria string  `json:"notifyCriteria" validate:"required,oneof==< <= = >= >"`
+	ResponsePath   string  `json:"responsePath" validate:"required"`
 }
 
 type Configuration struct {
-	BondsDataSourceURL string
-	BondsViewURL       string
-	BondsRateThreshold float64
-	BotAPIKey          string
-	WebhookURL         string
-	Port               string
-	Environment        string
-	BondsRunInterval   string
-	APITrackers        []*Tracker
-	ScraperTrackers    []*Tracker
+	BotAPIKey       string     `validate:"required"`
+	WebhookURL      string     `validate:"required,url"`
+	Port            string     `validate:"required"`
+	Environment     string     `validate:"required"`
+	APITrackers     []*Tracker `validate:"dive"`
+	ScraperTrackers []*Tracker `validate:"dive"`
 }
 
 var config *Configuration
@@ -39,29 +38,41 @@ func GetConfig() *Configuration {
 		}
 
 		config = &Configuration{
-
-			BondsDataSourceURL: os.Getenv("BONDS_DATA_SOURCE_URL"),
-			BondsViewURL:       os.Getenv("BONDS_VIEW_URL"),
-			BotAPIKey:          os.Getenv("BOT_API_KEY"),
-			WebhookURL:         os.Getenv("WEBHOOK_URL"),
-			Port:               os.Getenv("PORT"),
-			Environment:        os.Getenv("ENVIRONMENT"),
-			BondsRunInterval:   os.Getenv("BONDS_RUN_INTERVAL"),
+			BotAPIKey:   os.Getenv("BOT_API_KEY"),
+			WebhookURL:  os.Getenv("WEBHOOK_URL"),
+			Port:        os.Getenv("PORT"),
+			Environment: os.Getenv("ENVIRONMENT"),
 		}
 
-		if rate, rateErr := strconv.ParseFloat(os.Getenv("BONDS_RATE_THRESHOLD"), 64); rateErr != nil {
-			log.Fatalf("[GetConfig] Error parsing BONDS_RATE_THRESHOLD")
-		} else {
-			config.BondsRateThreshold = rate
+		apiTrackersString := os.Getenv("API_TRACKERS")
+		if apiTrackersString != "" {
+			var apiTrackers []*Tracker
+
+			if err := json.Unmarshal([]byte(apiTrackersString), &apiTrackers); err != nil {
+				log.Fatalf("[GetConfig] Error reading and processing environmental variable 'API_TRACKERS': %v", err)
+			}
+
+			config.APITrackers = apiTrackers
 		}
 
-		if config.BondsRunInterval == "" {
-			config.BondsRunInterval = "1h"
+		scraperTrackersString := os.Getenv("SCRAPER_TRACKERS")
+		if scraperTrackersString != "" {
+			var scraperTrackers []*Tracker
+
+			if err := json.Unmarshal([]byte(scraperTrackersString), &scraperTrackers); err != nil {
+				log.Fatalf("[GetConfig] Error reading and processing environmental variable 'SCRAPER_TRACKERS': %v", err)
+			}
+
+			config.ScraperTrackers = scraperTrackers
 		}
 
-		// TODO: Load trackers from the environment
+		if len(config.APITrackers) == 0 && len(config.ScraperTrackers) == 0 {
+			log.Fatalf("[GetConfig] No trackers defined in the configuration")
+		}
 
-		// For debugging purposes
+		config.ValidateConfig()
+
+		//For debugging purposes
 		// configJSON, err := json.MarshalIndent(config, "", "  ")
 		// if err != nil {
 		// 	log.Fatalf("[GetConfig] Error serializing configuration to JSON: %v", err)
@@ -70,4 +81,11 @@ func GetConfig() *Configuration {
 	}
 
 	return config
+}
+
+func (c *Configuration) ValidateConfig() {
+	validate := validator.New()
+	if err := validate.Struct(c); err != nil {
+		log.Fatalf("[GetConfig] Config validation error: %v", err)
+	}
 }

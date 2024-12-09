@@ -15,6 +15,9 @@ Vajadzības:
 - Nodrošināt komandu, kas ļauj mainīt vērtību, pie kuras jāsūta paziņojumi
 - Viena komanda, kas katram handlerim/klientam izdrukā visas pieejamās komandas rakstiski (lai ērtāk lietot, kamēr nav GUI)
 
+Mazāk svarīgas nātkones vajadzības:
+ - Caur botu uzstādīt nosacījumus lietotāja apziņošanai - vai trackojamā v-ba ir lielāka/mazāka/vienāda ar vēlamo vērtību
+
 Realizācijas aspekti:
 - Katram URL env variabļos jāpieliek arī kods, kurš tiks izmantots bota komandām
 - Laikam divi env variabļi: json saraksts ar linkiem, ko apstrādās no API un json saraksts ar linkiem, kas jāapstrādā scraperim
