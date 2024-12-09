@@ -16,6 +16,7 @@ Vajadzības:
 - Viena komanda, kas katram handlerim/klientam izdrukā visas pieejamās komandas rakstiski (lai ērtāk lietot, kamēr nav GUI)
 
 Mazāk svarīgas nātkones vajadzības:
+ - Pārsaukt repozitoriju un projektu par scraper-bot
  - Caur botu uzstādīt nosacījumus lietotāja apziņošanai - vai trackojamā v-ba ir lielāka/mazāka/vienāda ar vēlamo vērtību
 
 Realizācijas aspekti:
