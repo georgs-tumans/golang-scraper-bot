@@ -8,14 +8,14 @@ package handlers
   It is NOT meant for implementing the data fetching logic itself - that will be done in the clients.
 */
 type TrackerBehavior interface {
-	Execute() error
+	Execute(trackerCode string) error
 }
 
 type APITrackerBehavior struct {
 	// Client APIClient Client will implement the actual logic of fetching data from the API
 }
 
-func (a *APITrackerBehavior) Execute() error {
+func (a *APITrackerBehavior) Execute(trackerCode string) error {
 	// Call the client for fetching API data and process the result
 
 	// data, err := a.Client.FetchData(a.URL)
@@ -31,7 +31,7 @@ type ScraperTrackerBehavior struct {
 	// Client ScraperClient Client will implement the actual logic of fetching data by scarping a website
 }
 
-func (s *ScraperTrackerBehavior) Execute() error {
+func (s *ScraperTrackerBehavior) Execute(trackerCode string) error {
 	// Call the client for fetching website data and process the result
 
 	// data, err := s.Client.FetchData(s.URL)

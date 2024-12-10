@@ -16,7 +16,7 @@ Vajadzības:
 - Viena komanda, kas katram handlerim/klientam izdrukā visas pieejamās komandas rakstiski (lai ērtāk lietot, kamēr nav GUI)
 
 Mazāk svarīgas nātkones vajadzības:
- - Pārsaukt repozitoriju un projektu par scraper-bot
+ - Pārsaukt repozitoriju un projektu par price-tracker-bot vai kā tamlīdzīgi
  - Caur botu uzstādīt nosacījumus lietotāja apziņošanai - vai trackojamā v-ba ir lielāka/mazāka/vienāda ar vēlamo vērtību
 
 Realizācijas aspekti:
@@ -24,6 +24,7 @@ Realizācijas aspekti:
 - Laikam divi env variabļi: json saraksts ar linkiem, ko apstrādās no API un json saraksts ar linkiem, kas jāapstrādā scraperim
 - env. variabļa struktūra: "[{'code': 'bonds', 'url': 'https://www.krajobligacijas.lv/api/offers/today', 'interval': '1h', 'notifyValue': '3.5', 'responsePath': '#(period==12).interestRate'}]"
 - atbildes struktūras lasīšanai izmantosim gjson bibliotēku (https://github.com/tidwall/gjson), tātad env responsePath tas jāņem vērā un ja jāapstrādā json lists - jānorāda attiecīgi
+- Pieslēgt kādus linterus
 
 
 Vajadzīgās komandas:

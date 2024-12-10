@@ -64,7 +64,7 @@ func (t *Tracker) Start() {
 		for {
 			select {
 			case <-t.Ticker.C:
-				if err := t.Behavior.Execute(); err != nil {
+				if err := t.Behavior.Execute(t.Code); err != nil {
 					log.Printf("[Tracker] Error executing tracker '%s': %s", t.Code, err)
 				}
 			case <-t.Context.Done():
