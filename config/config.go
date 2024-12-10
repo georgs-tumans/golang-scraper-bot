@@ -22,7 +22,7 @@ type Tracker struct {
 type Configuration struct {
 	BotAPIKey       string     `validate:"required"`
 	WebhookURL      string     `validate:"required,url"`
-	Port            string     `validate:"required"`
+	Port            string     `validate:"omitempty,numeric"`
 	Environment     string     `validate:"required"`
 	APITrackers     []*Tracker `validate:"dive"`
 	ScraperTrackers []*Tracker `validate:"dive"`
