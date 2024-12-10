@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -73,8 +72,8 @@ func (b *BotFixer) handleMessage(message *tgbotapi.Message) {
 
 	log.Printf("[Bot fixer] %s wrote %s", user.FirstName, text)
 
-	if strings.HasPrefix(text, "/") {
-		// err = b.handleCommand(message.Chat.ID, text)
+	// TODO switch to the tgbotapi methods for working with messages/commands - message.IsCommand(), message.CommandArguments(), etc.
+	if message.IsCommand() {
 		if err := b.CommandHandler.HandleCommand(message.Chat.ID, text); err != nil {
 			log.Printf("[Bot fixer] An error occured while handling command: %s", err.Error())
 
@@ -82,12 +81,6 @@ func (b *BotFixer) handleMessage(message *tgbotapi.Message) {
 		}
 	}
 }
-
-// func (b *BotFixer) handleCommand(chatId int64, command string) error {
-// 	err := b.BondsHandler.HandleBondsCommand(chatId, command)
-
-// 	return err
-// }
 
 func (b *BotFixer) handleButton(query *tgbotapi.CallbackQuery) {
 	var text string

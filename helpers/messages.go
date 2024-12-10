@@ -6,7 +6,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-func SendMessage(bot *tgbotapi.BotAPI, chatId int64, text string, entities []tgbotapi.MessageEntity) {
+func SendMessageHTML(bot *tgbotapi.BotAPI, chatId int64, text string, entities []tgbotapi.MessageEntity) {
 	msg := tgbotapi.NewMessage(chatId, text)
 	if len(entities) > 0 {
 		msg.Entities = entities
@@ -18,7 +18,7 @@ func SendMessage(bot *tgbotapi.BotAPI, chatId int64, text string, entities []tgb
 		log.Printf("[Bot fixer] Error sending a message: %s", err.Error())
 	}
 
-	log.Printf("[Bot fixer] Sent message to chat: %d.Message: %s", chatId, text)
+	log.Printf("[Bot fixer] Sent message to chat: %d; Message: %s", chatId, text)
 }
 
 // func SendMenu(bot *tgbotapi.BotAPI, chatId int64) error {

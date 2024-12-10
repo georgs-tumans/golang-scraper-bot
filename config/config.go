@@ -32,6 +32,7 @@ var config *Configuration
 
 func GetConfig() *Configuration {
 	if config == nil {
+		log.Println("[Config] Loading configuration")
 		err := godotenv.Load()
 		if err != nil {
 			log.Println("[GetConfig] Error loading .env file")
@@ -108,4 +109,12 @@ func (c *Configuration) GetScraperTrackerData(code string) *Tracker {
 	}
 
 	return nil
+}
+
+func (c *Configuration) GetTrackerData(code string) *Tracker {
+	if tracker := c.GetAPITrackerData(code); tracker != nil {
+		return tracker
+	}
+
+	return c.GetScraperTrackerData(code)
 }

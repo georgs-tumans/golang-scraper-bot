@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"net/http"
-	models "web_scraper_bot/bot_fixer/models"
 	"web_scraper_bot/config"
 	"web_scraper_bot/handlers"
 	"web_scraper_bot/services"
@@ -87,8 +86,7 @@ func (b *BotFixer) InitializeBotWebhook() {
 
 func (b *BotFixer) DeleteWebhook() error {
 	url := b.TelegramBotAPI + b.Config.BotAPIKey + "/deleteWebhook"
-	response := &models.TelegramBotAPIResponse{}
-	err := services.GetRequest(url, response)
+	_, err := services.GetRequest(url)
 	if err != nil {
 		log.Fatalf("[Bot fixer] Error deleting webhook: %v", err)
 		return err

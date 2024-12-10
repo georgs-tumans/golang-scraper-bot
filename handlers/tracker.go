@@ -2,10 +2,14 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
 	"web_scraper_bot/config"
+	"web_scraper_bot/utilities"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 const (
@@ -13,58 +17,94 @@ const (
 	Scraper = "scraper"
 )
 
+type TrackerStatus struct {
+	StartTimestamp   time.Time
+	LastRunTimestamp time.Time
+	TotalRuns        int
+}
+
 // Tracker represents a single URL that the bot will track - either through an API or by scraping a website
 /* TODO
    - think about reusing one struct for Config and here
 */
 type Tracker struct {
-	Code     string
-	Ticker   *time.Ticker
-	Context  context.Context
-	Cancel   context.CancelFunc
-	Behavior TrackerBehavior
-	running  bool
+	Code        string
+	Ticker      *time.Ticker
+	Context     context.Context
+	Cancel      context.CancelFunc
+	Behavior    TrackerBehavior
+	trackerData *config.Tracker
+	Status      TrackerStatus
+	running     bool
+	chatID      int64
+	bot         *tgbotapi.BotAPI
 }
 
 /*
 TODO
-  - add code uniqueness check
+  - add code uniqueness check (whether the tracker with the same code already exists)
 */
-func CreateTracker(code string, runInterval time.Duration, config *config.Configuration) (*Tracker, error) {
+func CreateTracker(bot *tgbotapi.BotAPI, code string, runInterval time.Duration, config *config.Configuration, chatID int64) (*Tracker, error) {
 	var behavior TrackerBehavior
 	trackerType := DetermineTrackerType(code, config)
+	trackerData := config.GetTrackerData(code)
+
+	if trackerData == nil {
+		log.Printf("[Tracker] Failed to create a new tracker: %s; no such tracker found in configuration", code)
+
+		return nil, errors.New("no such tracker found in configuration")
+	}
 
 	switch trackerType {
 	case API:
-		behavior = &APITrackerBehavior{}
+		behavior = NewAPITrackerBehavior(bot)
 	case Scraper:
-		behavior = &ScraperTrackerBehavior{}
+		behavior = NewScraperTrackerBehavior(bot)
 	default:
 		return nil, fmt.Errorf("unsupported client type for code: %s", code)
 	}
 
+	// If runInterval is not provided, use the default interval from the configuration
+	runIntervalToUse := runInterval
+	if runIntervalToUse == 0 {
+		var err error
+		runIntervalToUse, err = utilities.ParseDurationWithDays(trackerData.Interval)
+		if err != nil {
+			log.Printf("[Tracker] Error parsing default configured run interval for tracker '%s': %s", code, err.Error())
+			return nil, err
+		}
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	return &Tracker{
-		Code:     code,
-		Ticker:   time.NewTicker(runInterval),
-		Context:  ctx,
-		Cancel:   cancel,
-		Behavior: behavior,
+		Code:        code,
+		Ticker:      time.NewTicker(runIntervalToUse),
+		trackerData: trackerData,
+		Context:     ctx,
+		Cancel:      cancel,
+		Behavior:    behavior,
+		chatID:      chatID,
+		bot:         bot,
 	}, nil
 }
 
+// TODO: Tracker logic should be executed immediately after creation, now it wait for the first Tick
 func (t *Tracker) Start() {
 	if t.running {
 		return
 	}
 	t.running = true
+	t.Status.StartTimestamp = time.Now()
 
 	go func() {
 		defer func() { t.running = false }()
 		for {
 			select {
 			case <-t.Ticker.C:
-				if err := t.Behavior.Execute(t.Code); err != nil {
+				t.Status.LastRunTimestamp = time.Now()
+				t.Status.TotalRuns++
+
+				if err := t.Behavior.Execute(t.trackerData, t.chatID); err != nil {
 					log.Printf("[Tracker] Error executing tracker '%s': %s", t.Code, err)
 				}
 			case <-t.Context.Done():

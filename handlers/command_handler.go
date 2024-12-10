@@ -68,7 +68,7 @@ func (ch *CommandHandler) HandleCommand(chatId int64, commandString string) erro
 		}
 	} else {
 		log.Printf("[CommandHandler] Unknown command: %s", commandFunction)
-		helpers.SendMessage(ch.bot, chatId, "Unrecognized command", nil)
+		helpers.SendMessageHTML(ch.bot, chatId, "Unrecognized command", nil)
 
 		return errors.New("unknown command")
 	}
@@ -84,20 +84,20 @@ func (ch *CommandHandler) handleStart(code string, chatId int64, commandParam *s
 	}
 
 	if tracker := ch.GetActiveTracker(code); tracker == nil {
-		newTracker, err := CreateTracker(code, 0, ch.config)
+		newTracker, err := CreateTracker(ch.bot, code, 0, ch.config, chatId)
 		if err != nil {
 			log.Printf("[CommandHandler] Error creating a new tracker: %s", code)
-			helpers.SendMessage(ch.bot, chatId, "Error creating a new tracker", nil)
+			helpers.SendMessageHTML(ch.bot, chatId, "Error creating a new tracker", nil)
 			return err
 		}
 		ch.AddRunningTracker(newTracker)
 		newTracker.Start()
 
-		helpers.SendMessage(ch.bot, chatId, "Tracker '"+code+"' has been started", nil)
+		helpers.SendMessageHTML(ch.bot, chatId, "Tracker '"+code+"' has been started", nil)
 		log.Printf("[CommandHandler] Starting tracker: %s", code)
 	} else {
 		log.Printf("[CommandHandler] Tracker '%s' is already running", code)
-		helpers.SendMessage(ch.bot, chatId, "Tracker '"+code+"' is already running", nil)
+		helpers.SendMessageHTML(ch.bot, chatId, "Tracker '"+code+"' is already running", nil)
 	}
 
 	return nil
@@ -114,10 +114,10 @@ func (ch *CommandHandler) handleStop(code string, chatId int64, commandParam *st
 	if tracker := ch.GetActiveTracker(code); tracker != nil {
 		ch.RemoveRunningTracker(code)
 		tracker.Stop()
-		helpers.SendMessage(ch.bot, chatId, "Tracker '"+code+"' has been stopped", nil)
+		helpers.SendMessageHTML(ch.bot, chatId, "Tracker '"+code+"' has been stopped", nil)
 	} else {
 		log.Printf("[CommandHandler] Tracker '%s' is not running", code)
-		helpers.SendMessage(ch.bot, chatId, "Tracker '"+code+"' is not running", nil)
+		helpers.SendMessageHTML(ch.bot, chatId, "Tracker '"+code+"' is not running", nil)
 	}
 
 	return nil
@@ -136,7 +136,7 @@ func (ch *CommandHandler) StopAllTrackers() {
 func (ch *CommandHandler) handleSetInterval(code string, chatId int64, commandParam *string) error {
 	if commandParam == nil {
 		log.Printf("[CommandHandler] No interval value provided")
-		helpers.SendMessage(ch.bot, chatId, "No interval value provided", nil)
+		helpers.SendMessageHTML(ch.bot, chatId, "No interval value provided", nil)
 
 		return errors.New("no interval value provided")
 	}
@@ -144,7 +144,7 @@ func (ch *CommandHandler) handleSetInterval(code string, chatId int64, commandPa
 	newInterval, err := utilities.ParseDurationWithDays(*commandParam)
 	if err != nil {
 		log.Printf("[CommandHandler] Invalid interval value: %s", err.Error())
-		helpers.SendMessage(ch.bot, chatId, "Invalid interval value. Available interval types: 'm'(minute), 'h'(hour), 'd'(day)", nil)
+		helpers.SendMessageHTML(ch.bot, chatId, "Invalid interval value. Available interval types: 'm'(minute), 'h'(hour), 'd'(day)", nil)
 
 		return err
 	}
@@ -154,12 +154,12 @@ func (ch *CommandHandler) handleSetInterval(code string, chatId int64, commandPa
 		tracker.UpdateInterval(newInterval)
 		tracker.Start()
 		log.Printf("[CommandHandler] Updated tracker '%s' interval to %s", code, newInterval)
-		helpers.SendMessage(ch.bot, chatId, "Tracker '"+code+"' interval update successfully", nil)
+		helpers.SendMessageHTML(ch.bot, chatId, "Tracker '"+code+"' interval update successfully", nil)
 
 		return nil
 	} else {
 		log.Printf("[CommandHandler] Tracker '%s' not found for interval update", code)
-		helpers.SendMessage(ch.bot, chatId, "Tracker '"+code+"' not found, it's probably not running", nil)
+		helpers.SendMessageHTML(ch.bot, chatId, "Tracker '"+code+"' not found, it's probably not running", nil)
 
 		return errors.New("tracker not found")
 	}
