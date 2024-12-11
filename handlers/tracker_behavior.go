@@ -44,7 +44,7 @@ func (tb *APITrackerBehavior) Execute(trackerData *config.Tracker, chatID int64)
 		helpers.SendMessageHTML(tb.bot, chatID, "Notify user about the data", nil)
 	}
 
-	return fmt.Sprintf("%f", result.CurrentValue), nil
+	return fmt.Sprintf("%.2f", result.CurrentValue), nil
 }
 
 type ScraperTrackerBehavior struct {

@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"sync"
 	"web_scraper_bot/config"
@@ -33,6 +35,7 @@ func NewCommandHandler(bot *tgbotapi.BotAPI) *CommandHandler {
 		"start":    ch.handleStart,
 		"stop":     ch.handleStop,
 		"interval": ch.handleSetInterval,
+		"status":   ch.handleStatus,
 	}
 
 	return ch
@@ -163,6 +166,75 @@ func (ch *CommandHandler) handleSetInterval(code string, chatId int64, commandPa
 
 		return errors.New("tracker not found")
 	}
+}
+
+func (ch *CommandHandler) handleStatus(code string, chatId int64, commandParam *string) error {
+	if code == "" {
+		// Handle the case when the user wants to see the status of all trackers
+		var builder strings.Builder
+		builder.WriteString("<b>All available trackers</b>\n\n")
+		for _, tracker := range ch.config.APITrackers {
+			activeStatus := "inactive"
+			if ch.GetActiveTracker(tracker.Code) != nil {
+				activeStatus = "active"
+			}
+
+			builder.WriteString(fmt.Sprintf("Tracker: %s | Status: %s | Type: API\n", tracker.Code, activeStatus))
+		}
+
+		for _, tracker := range ch.config.ScraperTrackers {
+			activeStatus := "inactive"
+			if ch.GetActiveTracker(tracker.Code) != nil {
+				activeStatus = "active"
+			}
+
+			builder.WriteString(fmt.Sprintf("Tracker: %s | Status: %s | Type: Scraper\n", tracker.Code, activeStatus))
+		}
+
+		helpers.SendMessageHTML(ch.bot, chatId, builder.String(), nil)
+		return nil
+	}
+
+	tracker := ch.GetActiveTracker(code)
+	if tracker == nil {
+		log.Printf("[CommandHandler] Tracker '%s' is not active", code)
+		helpers.SendMessageHTML(ch.bot, chatId, "Tracker '"+code+"' is not active", nil)
+
+		return errors.New("tracker not found")
+	}
+
+	lastRun := ""
+	if tracker.Status.LastRunTimestamp.IsZero() {
+		lastRun = "never"
+	} else {
+		lastRun = tracker.Status.LastRunTimestamp.Format("02.01.2006 15:04")
+	}
+
+	lastRecordedValue := tracker.Status.LastRecordedValue
+	if lastRecordedValue == "" {
+		lastRecordedValue = "none"
+	}
+
+	var builder strings.Builder
+	builder.WriteString(fmt.Sprintf("<b>Status for tracker %s</b>\n\n", code))
+	builder.WriteString("Status: active\n")
+	builder.WriteString("Tracker started: " + tracker.Status.StartTimestamp.Format("02.01.2006 15:04") + "\n")
+	builder.WriteString("Last run: " + lastRun + "\n")
+	builder.WriteString("Total runs: " + strconv.Itoa(tracker.Status.TotalRuns) + "\n")
+	builder.WriteString("Last recorded value: " + lastRecordedValue + "\n")
+	builder.WriteString("Target value: " + tracker.trackerData.NotifyValue + "\n")
+
+	// Escape special characters in NotifyCriteria
+	escapedNotifyCriteria := strings.ReplaceAll(tracker.trackerData.NotifyCriteria, "<", "&lt;")
+	escapedNotifyCriteria = strings.ReplaceAll(escapedNotifyCriteria, ">", "&gt;")
+
+	builder.WriteString("Notify criteria: " + escapedNotifyCriteria + "\n")
+	builder.WriteString("Current run interval: " + utilities.DurationToString(tracker.Status.CurrentInterval) + "\n")
+	builder.WriteString("Execution errors count: " + strconv.Itoa(len(tracker.Status.ExecutionErrors)) + "\n")
+
+	helpers.SendMessageHTML(ch.bot, chatId, builder.String(), nil)
+
+	return nil
 }
 
 /******************Utility******************/

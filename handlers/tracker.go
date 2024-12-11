@@ -93,6 +93,9 @@ func CreateTracker(bot *tgbotapi.BotAPI, code string, runInterval time.Duration,
 		Behavior:    behavior,
 		chatID:      chatID,
 		bot:         bot,
+		Status: TrackerStatus{
+			CurrentInterval: runIntervalToUse,
+		},
 	}, nil
 }
 
