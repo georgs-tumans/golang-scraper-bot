@@ -2,6 +2,7 @@ package utilities
 
 import (
 	"errors"
+	"fmt"
 	"regexp"
 	"time"
 )
@@ -31,6 +32,20 @@ func ParseDurationWithDays(s string) (time.Duration, error) {
 	}
 
 	return time.ParseDuration(s)
+}
+
+func DurationToString(d time.Duration) string {
+	hours := int(d.Hours())
+	minutes := int(d.Minutes()) % 60
+	seconds := int(d.Seconds()) % 60
+
+	if hours > 0 {
+		return fmt.Sprintf("%dh %dm %ds", hours, minutes, seconds)
+	} else if minutes > 0 {
+		return fmt.Sprintf("%dm %ds", minutes, seconds)
+	} else {
+		return fmt.Sprintf("%ds", seconds)
+	}
 }
 
 func extractLetter(s string) string {

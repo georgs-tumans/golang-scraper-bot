@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"web_scraper_bot/clients"
 	"web_scraper_bot/config"
 	"web_scraper_bot/helpers"
@@ -16,7 +17,7 @@ to add new ways of fetching data without changing the existing code.
 It is NOT meant for implementing the data fetching logic itself - that will be done in the clients.
 */
 type TrackerBehavior interface {
-	Execute(trackerData *config.Tracker, chatID int64) error
+	Execute(trackerData *config.Tracker, chatID int64) (string, error)
 }
 
 type APITrackerBehavior struct {
@@ -31,11 +32,11 @@ func NewAPITrackerBehavior(bot *tgbotapi.BotAPI) *APITrackerBehavior {
 	}
 }
 
-func (tb *APITrackerBehavior) Execute(trackerData *config.Tracker, chatID int64) error {
+func (tb *APITrackerBehavior) Execute(trackerData *config.Tracker, chatID int64) (string, error) {
 	result, err := tb.client.FetchAndExtractData(trackerData)
 	if err != nil {
 		// Notify the user? Add to some failure statistics?
-		return err
+		return "", err
 	}
 
 	// TODO add proper message
@@ -43,7 +44,7 @@ func (tb *APITrackerBehavior) Execute(trackerData *config.Tracker, chatID int64)
 		helpers.SendMessageHTML(tb.bot, chatID, "Notify user about the data", nil)
 	}
 
-	return nil
+	return fmt.Sprintf("%f", result.CurrentValue), nil
 }
 
 type ScraperTrackerBehavior struct {
@@ -56,7 +57,7 @@ func NewScraperTrackerBehavior(bot *tgbotapi.BotAPI) *ScraperTrackerBehavior {
 	}
 }
 
-func (s *ScraperTrackerBehavior) Execute(trackerData *config.Tracker, chatID int64) error {
+func (s *ScraperTrackerBehavior) Execute(trackerData *config.Tracker, chatID int64) (string, error) {
 	// Call the client for fetching website data and process the result
 
 	// data, err := s.Client.FetchData(s.URL)
@@ -65,5 +66,5 @@ func (s *ScraperTrackerBehavior) Execute(trackerData *config.Tracker, chatID int
 	// }
 
 	// log.Printf("[ScraperTracker] Data scraped from website: %v", data)
-	return nil
+	return "", nil
 }

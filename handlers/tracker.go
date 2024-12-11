@@ -18,9 +18,17 @@ const (
 )
 
 type TrackerStatus struct {
-	StartTimestamp   time.Time
-	LastRunTimestamp time.Time
-	TotalRuns        int
+	StartTimestamp    time.Time
+	LastRunTimestamp  time.Time
+	TotalRuns         int
+	LastRecordedValue string
+	CurrentInterval   time.Duration
+	ExecutionErrors   []*TrackerExecutionError
+}
+
+type TrackerExecutionError struct {
+	Error     error
+	Timestamp time.Time
 }
 
 // Tracker represents a single URL that the bot will track - either through an API or by scraping a website
@@ -93,8 +101,15 @@ func (t *Tracker) Start() {
 	if t.running {
 		return
 	}
+
+	// Recreate context for when the tracker is being restarted after interval update
+	if t.Context.Err() != nil {
+		t.Context, t.Cancel = context.WithCancel(context.Background())
+	} else {
+		t.Status.StartTimestamp = time.Now() // Set the start timestamp only when the tracker is started for the first time
+	}
+
 	t.running = true
-	t.Status.StartTimestamp = time.Now()
 
 	go func() {
 		defer func() { t.running = false }()
@@ -104,8 +119,11 @@ func (t *Tracker) Start() {
 				t.Status.LastRunTimestamp = time.Now()
 				t.Status.TotalRuns++
 
-				if err := t.Behavior.Execute(t.trackerData, t.chatID); err != nil {
+				if value, err := t.Behavior.Execute(t.trackerData, t.chatID); err != nil {
 					log.Printf("[Tracker] Error executing tracker '%s': %s", t.Code, err)
+					t.Status.ExecutionErrors = append(t.Status.ExecutionErrors, &TrackerExecutionError{Error: err, Timestamp: time.Now()})
+				} else {
+					t.Status.LastRecordedValue = value
 				}
 			case <-t.Context.Done():
 				log.Printf("[Tracker] Stopping tracker '%s'", t.Code)
@@ -122,11 +140,13 @@ func (t *Tracker) Stop() {
 
 	t.Ticker.Stop()
 	t.Cancel()
+	t.running = false
 }
 
 func (t *Tracker) UpdateInterval(newInterval time.Duration) {
 	t.Ticker.Stop()
 	t.Ticker = time.NewTicker(newInterval)
+	t.Status.CurrentInterval = newInterval
 }
 
 func DetermineTrackerType(trackerCode string, config *config.Configuration) string {

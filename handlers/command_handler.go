@@ -154,7 +154,7 @@ func (ch *CommandHandler) handleSetInterval(code string, chatId int64, commandPa
 		tracker.UpdateInterval(newInterval)
 		tracker.Start()
 		log.Printf("[CommandHandler] Updated tracker '%s' interval to %s", code, newInterval)
-		helpers.SendMessageHTML(ch.bot, chatId, "Tracker '"+code+"' interval update successfully", nil)
+		helpers.SendMessageHTML(ch.bot, chatId, "Tracker '"+code+"' run interval successfully updated to "+utilities.DurationToString(newInterval), nil)
 
 		return nil
 	} else {

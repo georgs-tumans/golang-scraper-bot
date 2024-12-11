@@ -3,7 +3,6 @@
 - vēlamās procentu likmes konfigurācija caur bota saskarni
 - emojis?
 - pamēģināt entities messagiem
-- kas notiek ar configu - vai getConfig katru reizi lādē no jauna no OS?
 
 
 API request handler:
