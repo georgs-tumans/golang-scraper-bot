@@ -147,9 +147,11 @@ func (t *Tracker) Stop() {
 }
 
 func (t *Tracker) UpdateInterval(newInterval time.Duration) {
-	t.Ticker.Stop()
+	t.Stop()
+	time.Sleep(1 * time.Second)
 	t.Ticker = time.NewTicker(newInterval)
 	t.Status.CurrentInterval = newInterval
+	t.Start()
 }
 
 func DetermineTrackerType(trackerCode string, config *config.Configuration) string {

@@ -5,7 +5,6 @@
 - pamēģināt entities messagiem
 
 Rindas kārtība:
-- ja trackerim maina intervālu un tad to aptur, trackeris turpina strādāt
 - komanda, kas parāda visas pieejamās komandas (help)
 
 
