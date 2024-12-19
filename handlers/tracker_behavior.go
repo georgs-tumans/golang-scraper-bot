@@ -40,6 +40,7 @@ func (tb *APITrackerBehavior) Execute(trackerData *config.Tracker, chatID int64)
 	}
 
 	// TODO add proper message
+	// Rethink sending messages since multiple notification criteria can be set now
 	if result.ShouldNotify {
 		helpers.SendMessageHTML(tb.bot, chatID, "Notify user about the data", nil)
 	}

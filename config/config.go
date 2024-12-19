@@ -9,14 +9,18 @@ import (
 	"github.com/joho/godotenv"
 )
 
+type NotifyCriteria struct {
+	Operator string `json:"operator" validate:"required,oneof==< <= = >= >"`
+	Value    string `json:"value" validate:"required,numeric"`
+}
+
 type Tracker struct {
-	Code           string `json:"code" validate:"required"`
-	APIURL         string `json:"apiUrl" validate:"required,url"`
-	ViewURL        string `json:"viewUrl" validate:"omitempty,url"`
-	Interval       string `json:"interval" validate:"required"`
-	NotifyValue    string `json:"notifyValue" validate:"required"`
-	NotifyCriteria string `json:"notifyCriteria" validate:"required,oneof==< <= = >= >"`
-	ResponsePath   string `json:"responsePath" validate:"required"`
+	Code           string           `json:"code" validate:"required"`
+	APIURL         string           `json:"apiUrl" validate:"required,url"`
+	ViewURL        string           `json:"viewUrl" validate:"omitempty,url"`
+	Interval       string           `json:"interval" validate:"required"`
+	NotifyCriteria []NotifyCriteria `json:"notifyCriteria"`
+	ResponsePath   string           `json:"responsePath" validate:"required"`
 }
 
 type Configuration struct {

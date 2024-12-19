@@ -5,6 +5,7 @@
 - pamēģināt entities messagiem
 
 Rindas kārtība:
+- iespēja norādīt katram trackerim vairākus apziņošanas kritērijus
 - komanda, kas parāda visas pieejamās komandas (help)
 
 

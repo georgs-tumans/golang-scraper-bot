@@ -6,7 +6,6 @@ import (
 	"log"
 	"strconv"
 	config "web_scraper_bot/config"
-	"web_scraper_bot/helpers"
 	"web_scraper_bot/services"
 
 	"github.com/tidwall/gjson"
@@ -36,21 +35,18 @@ func (c *PublicAPIClient) FetchAndExtractData(trackerData *config.Tracker) (*Dat
 	}
 
 	extractedValueFloat, extractedErr := strconv.ParseFloat(extractedValue, 64)
-	targetValueFloat, targetErr := strconv.ParseFloat(c.trackerData.NotifyValue, 64)
-	if extractedErr != nil || targetErr != nil {
-		log.Println("[Public API CLient] Error converting values for tracker: "+c.trackerData.Code, extractedErr.Error(), targetErr.Error())
-		return nil, errors.New("error converting values")
+	if extractedErr != nil {
+		log.Println("[Public API CLient] Error converting values for tracker: "+c.trackerData.Code, extractedErr.Error())
+		return nil, extractedErr
 	}
 
-	shouldNotify, err := helpers.CompareNumbers(extractedValueFloat, targetValueFloat, c.trackerData.NotifyCriteria)
+	shouldNotify, err := ShouldNotify(c.trackerData, extractedValueFloat)
 	if err != nil {
-		log.Println("[Public API CLient] Error comparing values for tracker: "+c.trackerData.Code, err.Error())
 		return nil, err
 	}
 
 	result := &DataResult{
 		CurrentValue: extractedValueFloat,
-		TargetValue:  targetValueFloat,
 		ShouldNotify: shouldNotify,
 	}
 
