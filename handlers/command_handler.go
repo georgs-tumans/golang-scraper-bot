@@ -222,13 +222,7 @@ func (ch *CommandHandler) handleStatus(code string, chatId int64, commandParam *
 	builder.WriteString("Last run: " + lastRun + "\n")
 	builder.WriteString("Total runs: " + strconv.Itoa(tracker.Status.TotalRuns) + "\n")
 	builder.WriteString("Last recorded value: " + lastRecordedValue + "\n")
-	builder.WriteString("Target value: " + tracker.trackerData.NotifyValue + "\n")
-
-	// Escape special characters in NotifyCriteria
-	escapedNotifyCriteria := strings.ReplaceAll(tracker.trackerData.NotifyCriteria, "<", "&lt;")
-	escapedNotifyCriteria = strings.ReplaceAll(escapedNotifyCriteria, ">", "&gt;")
-
-	builder.WriteString("Notify criteria: " + escapedNotifyCriteria + "\n")
+	builder.WriteString(helpers.FormatNotificationCriteriaString(tracker.trackerData.NotifyCriteria) + "\n")
 	builder.WriteString("Current run interval: " + utilities.DurationToString(tracker.Status.CurrentInterval) + "\n")
 	builder.WriteString("Execution errors count: " + strconv.Itoa(len(tracker.Status.ExecutionErrors)) + "\n")
 

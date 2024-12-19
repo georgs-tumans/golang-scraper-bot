@@ -40,14 +40,14 @@ func (c *PublicAPIClient) FetchAndExtractData(trackerData *config.Tracker) (*Dat
 		return nil, extractedErr
 	}
 
-	shouldNotify, err := ShouldNotify(c.trackerData, extractedValueFloat)
+	notification, err := ProcessNotificationCriteria(c.trackerData, extractedValueFloat)
 	if err != nil {
 		return nil, err
 	}
 
 	result := &DataResult{
-		CurrentValue: extractedValueFloat,
-		ShouldNotify: shouldNotify,
+		CurrentValue:        extractedValueFloat,
+		NotificationMessage: notification,
 	}
 
 	c.trackerData = nil

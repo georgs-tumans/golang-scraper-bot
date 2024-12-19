@@ -19,7 +19,7 @@ type Tracker struct {
 	APIURL         string           `json:"apiUrl" validate:"required,url"`
 	ViewURL        string           `json:"viewUrl" validate:"omitempty,url"`
 	Interval       string           `json:"interval" validate:"required"`
-	NotifyCriteria []NotifyCriteria `json:"notifyCriteria"`
+	NotifyCriteria []NotifyCriteria `json:"notifyCriteria" validate:"dive"`
 	ResponsePath   string           `json:"responsePath" validate:"required"`
 }
 
